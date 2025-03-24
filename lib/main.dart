@@ -1,169 +1,128 @@
 import 'package:flutter/material.dart';
 
+import 'counter.dart';
+import 'objectbox.g.dart';
+
 void main() {
-  runApp(MaterialApp(home: MyApp()));
+  runApp(const MyApp());
 }
 
-class Tweet {
-  final String userName;
-  final String userInitial;
-  final Color userColor;
-  final String content;
-  final String date;
-
-  Tweet({
-    required this.userName,
-    required this.userInitial,
-    required this.userColor,
-    required this.content,
-    required this.date,
-  });
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: const CounterPage(),
+    );
+  }
 }
 
-class TweetTile extends StatelessWidget {
-  final Tweet tweet;
+class CounterPage extends StatefulWidget {
+  const CounterPage({super.key});
 
-  const TweetTile({super.key, required this.tweet});
+  @override
+  State<CounterPage> createState() => _CounterPageState();
+}
+
+class _CounterPageState extends State<CounterPage> {
+  Store? store;
+  Box<Counter>? counterBox;
+  List<Counter> counters = [];
+
+  Future<void> _initStore() async {
+    store = await openStore();
+    counterBox = store?.box<Counter>();
+    _fetchCounters();
+  }
+
+  void _fetchCounters() {
+    counters = counterBox?.getAll() ?? [];
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _initStore();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: tweet.userColor,
-        child: Text(tweet.userInitial),
+    return Scaffold(
+      appBar: AppBar(title: const Text('カウンター')),
+      body: ListView.builder(
+        itemCount: counters.length,
+        itemBuilder: (context, index) {
+          final counter = counters[index];
+          return Padding(
+            padding: const EdgeInsets.all(8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    counter.title,
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ),
+                Text('${counter.count}', style: const TextStyle(fontSize: 16)),
+                IconButton(
+                  onPressed: () {
+                    counter.count++;
+                    counterBox?.put(counter);
+                    _fetchCounters();
+                  },
+                  icon: const Icon(Icons.plus_one),
+                ),
+                IconButton(
+                  onPressed: () {
+                    counterBox?.remove(counter.id);
+                    _fetchCounters();
+                  },
+                  icon: const Icon(Icons.delete),
+                ),
+              ],
+            ),
+          );
+        },
       ),
-      title: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            tweet.userName,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          Text(tweet.date),
-        ],
-      ),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(tweet.content),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.thumb_up),
-                onPressed: () {
-                  // イイネボタンの処理
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.repeat),
-                onPressed: () {
-                  // リツイートボタンの処理
-                },
-              ),
-            ],
-          ),
-        ],
+      floatingActionButton: FloatingActionButton(
+        child: const Icon(Icons.add),
+        onPressed: () async {
+          final newCounter = await Navigator.of(context).push<Counter>(
+            MaterialPageRoute(
+              builder: (context) {
+                return const AddCounterPage();
+              },
+            ),
+          );
+          if (newCounter != null) {
+            counterBox?.put(newCounter);
+            _fetchCounters();
+          }
+        },
       ),
     );
   }
 }
 
-class MyApp extends StatelessWidget {
-  MyApp({super.key});
+class AddCounterPage extends StatefulWidget {
+  const AddCounterPage({super.key});
 
-  final List<Tweet> tweets = [
-    Tweet(
-      userName: 'ユーザーA',
-      userInitial: 'A',
-      userColor: Colors.blue,
-      content: 'これはユーザーAのツイートです。',
-      date: '2025/03/24',
-    ),
-    Tweet(
-      userName: 'ユーザーB',
-      userInitial: 'B',
-      userColor: Colors.green,
-      content: 'これはユーザーBのツイートです。',
-      date: '2025/03/24',
-    ),
-    Tweet(
-      userName: 'ユーザーC',
-      userInitial: 'C',
-      userColor: Colors.red,
-      content: 'これはユーザーCのツイートです。',
-      date: '2025/03/25',
-    ),
-    Tweet(
-      userName: 'ユーザーD',
-      userInitial: 'D',
-      userColor: Colors.orange,
-      content: 'これはユーザーDのツイートです。',
-      date: '2025/03/26',
-    ),
-    Tweet(
-      userName: 'ユーザーE',
-      userInitial: 'E',
-      userColor: Colors.purple,
-      content: 'これはユーザーEのツイートです。',
-      date: '2025/03/27',
-    ),
-    Tweet(
-      userName: 'ユーザーF',
-      userInitial: 'F',
-      userColor: Colors.yellow,
-      content: 'これはユーザーFのツイートです。',
-      date: '2025/03/28',
-    ),
-    Tweet(
-      userName: 'ユーザーG',
-      userInitial: 'G',
-      userColor: Colors.cyan,
-      content: 'これはユーザーGのツイートです。',
-      date: '2025/03/29',
-    ),
-    Tweet(
-      userName: 'ユーザーH',
-      userInitial: 'H',
-      userColor: Colors.brown,
-      content: 'これはユーザーHのツイートです。',
-      date: '2025/03/30',
-    ),
-    Tweet(
-      userName: 'ユーザーI',
-      userInitial: 'I',
-      userColor: Colors.grey,
-      content: 'これはユーザーIのツイートです。',
-      date: '2025/03/31',
-    ),
-    Tweet(
-      userName: 'ユーザーJ',
-      userInitial: 'J',
-      userColor: Colors.teal,
-      content: 'これはユーザーJのツイートです。',
-      date: '2025/04/01',
-    ),
-  ];
+  @override
+  State<AddCounterPage> createState() => _AddCounterPageState();
+}
 
+class _AddCounterPageState extends State<AddCounterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'コンブ@Flutter大学',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: Colors.blue,
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: tweets.map((tweet) => TweetTile(tweet: tweet)).toList(),
-        ),
+      appBar: AppBar(title: const Text('カウンター追加')),
+      body: TextFormField(
+        onFieldSubmitted: (text) {
+          final counter = Counter(title: text, count: 0);
+          Navigator.of(context).pop(counter);
+        },
       ),
     );
   }

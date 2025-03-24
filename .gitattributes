@@ -1,0 +1,5 @@
+*.dart linguist-language=Dart
+*.cc linguist-language=C++
+*.h linguist-language=C++
+CMakeLists.txt linguist-language=CMake
+*.cmake linguist-language=CMake
